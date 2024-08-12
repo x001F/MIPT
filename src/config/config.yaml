@@ -1,0 +1,53 @@
+BOT_TOKEN: '6857583661:AAFPeGhtnR8dIlCivwGqZ3i97WcH9c5RRok'
+commands:
+  stuff:
+    help: Помощь
+    start: Перезапускает бота
+    contact: Список полезных контактов
+    rating: Рейтинг отрядов по количеству кварков
+    panel: Админ-панель
+  student:
+    help: Помощь
+    start: Перезапускает бота
+    contact: Список полезных контактов
+    rating: Рейтинг отрядов по количеству кварков
+  random:
+    help: Помощь
+    start: Перезапускает бота
+    verify: Подать заявку на вступление в лагерь
+logging:
+  disable_existing_loggers: false
+  formatters:
+    base:
+      format: '%(levelname)s | %(asctime)s | %(funcName)s | %(name)s | %(message)s'
+  handlers:
+    console:
+      class: logging.StreamHandler
+      formatter: base
+    file:
+      backupCount: 7,
+      class: logging.handlers.TimedRotatingFileHandler
+      encoding: utf-8
+      filename: src/logs/.log
+      formatter: base
+      interval: 7
+      when: d
+  loggers:
+    admin:
+      handlers:
+        - file
+        - console
+      level: INFO
+    main:
+      handlers:
+        - file
+        - console
+      level: INFO
+    main.handlers:
+      handlers:
+        - file
+        - console
+      level: INFO
+      propagate: false
+  propagate: false
+  version: 1
