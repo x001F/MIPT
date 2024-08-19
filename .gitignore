@@ -2,4 +2,6 @@
 .idea
 .git
 .gitignore
+src/logs/logfile
+src/config/data.db
 venv

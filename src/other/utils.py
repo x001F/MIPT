@@ -14,6 +14,6 @@ def escape_md(string: str) -> str:
 
 
 def init_log() -> None:
-    if not os.path.exists('src/logs/logfile'):
+    if os.path.exists('src/logs'):
         with open('src/logs/logfile', 'w') as f:
             f.write('')

@@ -4,7 +4,7 @@ from src.other import (get_staff, get_students, add_staff, add_student, delete_s
 from aiogram.types import BotCommand
 
 # Startup START
-BOT_TOKEN = '6857583661:AAFPeGhtnR8dIlCivwGqZ3i97WcH9c5RRok'
+BOT_TOKEN = 'Put your token here'
 
 commands = [
     BotCommand(command='start', description='Перезапускает бота'),
