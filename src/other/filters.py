@@ -1,21 +1,11 @@
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
-from src.other.db import admin_check, instructor_check, student_check, random_check, block_check
+from src.other.db import staff_check, student_check
 
 
-class IsAdmin(BaseFilter):
+class IsStaff(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return await admin_check(message.from_user.id)
-
-
-class IsInstructor(BaseFilter):
-    async def __call__(self, message: Message) -> bool:
-        return await instructor_check(message.from_user.id)
-
-
-class IsStuff(BaseFilter):
-    async def __call__(self, message: Message) -> bool:
-        return await instructor_check(message.from_user.id) or await admin_check(message.from_user.id)
+        return await staff_check(message.from_user.id)
 
 
 class IsStudent(BaseFilter):
@@ -23,11 +13,6 @@ class IsStudent(BaseFilter):
         return await student_check(message.from_user.id)
 
 
-class IsNotRandom(BaseFilter):
+class IsRandom(BaseFilter):
     async def __call__(self, message: Message) -> bool:
-        return await random_check(message.from_user.id)
-
-
-class IsNotBlocked(BaseFilter):
-    async def __call__(self, message: Message) -> bool:
-        return await block_check(message.from_user.id)
+        return await student_check(message.from_user.id) or await staff_check(message.from_user.id)

@@ -1,98 +1,79 @@
-from aiogram.types import Message
-from aiogram.filters import CommandStart, Command
+from aiogram.types import Message, CallbackQuery
+from aiogram.filters import CommandStart, Command, CommandObject
 from aiogram import Router, F
 from aiogram.fsm.context import FSMContext
-from src.other.db import stuff_check, student_check
-from src.other import IsNotRandom, IsNotBlocked, get_students, get_rating, share_contact_keyboard
-from src.config.get_logger import *
-from src.states import Verification
+from src.bot import bot
+from src.other import *
+from src.config import main_handlers as logger, instr_contacts, contact_text, name_sc, add_sc
 
-logger = get_logger('main.handlers')
 basic_router = Router()
+prev_squad = -999
 
 
-@basic_router.message(IsNotBlocked(), CommandStart())
+@basic_router.message(IsRandom(), CommandStart())
 async def start_handler(message: Message):
-    text = f"""Добро пожаловать в инфо-бота летней школы МФТИ."""
-    await message.reply(text)
+    text = (f'*Добро пожаловать в инфо-бота летней школы МФТИ*'
+            f'\nЯ могу помочь узнавать о новых событиях быстрее всего!'
+            f'\nНажми на /help чтобы узнать все существующие команды')
+    await message.answer(text, parse_mode='MarkDown')
     logger.info(f'/start - @{message.from_user.username} - {message.from_user.id}')
 
 
-@basic_router.message(IsNotBlocked(), Command('help'))
-async def help_handler(message: Message):
-    text = (f"Привет, _{message.from_user.first_name}_!"
-            f"\n*Существующие команды этого бота:*"
-            f"\n\n/start  —  Перезапуск бота"
-            f"\n/help  —  Помощь")
-    if await stuff_check(message.from_user.id):
-        text += ("\n/contact  —  Список полезных контактов"
-                 "\n/rating  —  Рейтинг отрядов по количеству кварков"
-                 "\n/panel  —   Админ-панель")
-    elif await student_check(message.from_user.id):
-        text += ("\n/contact  —  Список полезных контактов"
-                 "\n/rating  —  Рейтинг отрядов по количеству кварков")
+@basic_router.message(CommandStart())
+async def start_handler(message: Message, command: CommandObject):
+    if purpose := await link_code_check(command.args):
+        text = (f'*Добро пожаловать в инфо-бота летней школы МФТИ*'
+                f'\nЯ могу помочь узнавать о новых событиях быстрее всего!'
+                f'\nНажми на /help чтобы узнать все существующие команды')
+        if message.from_user.username:
+            await link_code_join(command.args)
+            await add_sc[purpose[0]](message.from_user.id, message.from_user.username)
+            text = f'*Вы успешно добавлены в список {name_sc[purpose[0]]}!*\n\n' + text
+            log_text = f'Joined by /start link - @{message.from_user.username} - {message.from_user.id}'
+        else:
+            text = (f'  *Вас не получилось добавить в список {name_sc[purpose[0]]}*'
+                    f'\n_Добавьте себе username чтобы пользоваться этим ботом._')
+            log_text = f'Attempt to join by /start link - !@{message.from_user.username}! - {message.from_user.id}'
     else:
-        text += "\n/verify  —  Подать заявку на вступление в лагерь"
+        text = ('*Добро пожаловать в инфо-бота летней школы МФТИ!*'
+                '\n_У вас ограниченный доступ к боту'
+                '\nЧтобы получить полный доступ вам необходимо перейти по ссылке полученную от админов._')
+        log_text = f'/start - unverified user - @{message.from_user.username} - {message.from_user.id}'
 
-    await message.answer(text, parse_mode='MarkDown')
+    await message.reply(text, parse_mode='MarkDown')
+    logger.info(log_text)
+
+
+@basic_router.message(IsRandom(), Command('help'))
+async def help_handler(message: Message):
+    text = ("*Добро пожаловать в инфо-бота летней школы МФТИ!"
+            f"\nСуществующие команды этого бота:*"
+            f"\n\n/start  —  Перезапуск бота"
+            f"\n/help  —  Помощь"
+            f"\n/contact  —  Список полезных контактов")
+    if await staff_check(message.from_user.id):
+        text += "\n/panel  —   Админ-панель"
+    await message.reply(text, parse_mode='MarkDown')
     logger.info(f'/help - @{message.from_user.username} - {message.from_user.id}')
 
 
-@basic_router.message(IsNotBlocked(), Command('verify'))
-async def verify_handler(message: Message) -> None:
-    text = ('Чтобы пользоваться всеми возможностями бота вам необходимо подать заявку на вступление\n'
-            'Нажмите кнопку снизу чтобы подать заявку на вступление')
-    await message.answer(text, reply_markup=share_contact_keyboard)
-
-# text = ('Ваша заявка на вступление успешно подана'
-#                 'Модераторы рассмотрят ее в скором времени.')
-
-
-@basic_router.message(IsNotBlocked(), F.content_type == 'contact')
-async def ask_full_name(message: Message, state: FSMContext) -> None:
-    if message.from_user.id == message.contact.user_id:
-        await message.answer('Номер телефона получен, для подачи заявки вам будет необходимо отправить свое ФИО')
-        await state.set_state(Verification.full_name)
-        await state.update_data({'phone_number': message.contact.phone_number})
-    else:
-        await message.answer('Некорректные вводимые данные, поделитесь своим контактом.',
-                             reply_markup=share_contact_keyboard)
-
-
-# @basic_router.message(IsNotBlocked(), F.content_type == 'text', not F.text.isascii(), Verification.full_name)
-# async def ask_full_name(message: Message, state: FSMContext) -> None:
-#     data = await state.get_data()
-#     full_name, phone_number = message.text, data['phone_number']
-    
-
-@basic_router.message(IsNotRandom, Command('contact'))
-async def contact_handler(message: Message):
-    text = ''
-    user_data = await get_students(message.from_user.id)
-    if user_data[0]:
-        text += f"*Твой отряд: №{user_data[0]}*\n"
-
-    text = (f"{text}"
-            "\n*Контакты для экстренной связи:*"
-            "\n_Скорая помощь_           112"
-            "\n\n*Главный организатор:*"
-            "\n_Ксения_          +7 999 095-34-08"
-            "\n\n*Ответственный за обучение:*"
-            "\n_Елизавета_    +7 921 180-47-39"
-            "\n\n*Ответственный за проживание:*"
-            "\n_Анжела_         +7 937 317-02-95"
-            "\n\n_Если нужной для тебя информации не нашлось, обратись к вожатым._")
-    await message.reply(text, parse_mode='MarkDown')
+@basic_router.message(IsRandom(), Command('contact'))
+async def contact_handler(message: Message, state: FSMContext):
+    text = "Добро пожаловать в инфо-бота летней школы МФТИ!\n" + contact_text
+    msg = await message.answer(text, parse_mode='MarkDown', reply_markup=instructors_keyboard)
+    await state.update_data({'message_id': msg.message_id})
     logger.info(f'/contact - @{message.from_user.username} - {message.from_user.id}')
 
 
-@basic_router.message(IsNotRandom(), Command('rating'))
-async def rating_handler(message: Message) -> None:
-    rating = await get_rating()
-    if rating:
-        rating = '\n'.join(f'*Отряд №{team_id:< 4}*    —    *{quark_count}*' for team_id, quark_count in rating)
+@basic_router.callback_query(IsRandom(), F.data.startswith('squad_'))
+async def contact_squad_show(callback_query: CallbackQuery, state: FSMContext):
+    global prev_squad  # it is a lot faster than using FSM (db)
+    squad = int(callback_query.data[6:])
+    if squad != prev_squad:
+        prev_squad = squad
+        text = f"Добро пожаловать в инфо-бота летней школы МФТИ!\n\nКонтакты вожатых {squad} отряда\n" + \
+               '\n'.join('  '.join(contact) for contact in instr_contacts[squad-1]) + '\n' + contact_text
+        await bot.edit_message_text(text, callback_query.from_user.id, (await state.get_data())['message_id'],
+                                    reply_markup=instructors_keyboard, parse_mode='MarkDown')
     else:
-        rating = '*К сожалению, здесь пусто...*'
-    await message.answer(f"""*Рейтинг отрядов*\n\n{rating}
-    \n_Если заметили неточность или ошибку сообщите своим вожатым, они скоро все исправят._""", parse_mode='MarkDown')
-    logger.info(f'/rating - @{message.from_user.username} - {message.from_user.id}')
+        await callback_query.answer(f'Контакты для {squad} отряда уже выведены')

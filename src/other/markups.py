@@ -1,56 +1,51 @@
-from aiogram.types import (InlineKeyboardMarkup, ReplyKeyboardMarkup,
-                           InlineKeyboardButton, KeyboardButton, KeyboardButtonRequestUsers)
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 panel_buttons = [
-    [InlineKeyboardButton(text='Админы', callback_data='edit_admins')],
-    [InlineKeyboardButton(text='Вожатые', callback_data='edit_instructors')],
+    [InlineKeyboardButton(text='Вожатые и организаторы', callback_data='edit_staff')],
     [InlineKeyboardButton(text='Ученики', callback_data='edit_students')],
-    [InlineKeyboardButton(text='Рейтинг отрядов', callback_data='edit_rating')]
+    [InlineKeyboardButton(text='Рассылка', callback_data='panel_mailing')],
 ]
 
-admins_edit_buttons = [
-    [InlineKeyboardButton(text='Добавить админа', callback_data='add_admins')],
-    [InlineKeyboardButton(text='Удалить админа', callback_data='delete_admins')],
-    [InlineKeyboardButton(text='Назад', callback_data='cancel')]
-]
-
-instructors_edit_buttons = [
-    [InlineKeyboardButton(text='Добавить вожатого', callback_data='add_instructors')],
-    [InlineKeyboardButton(text='Удалить вожатого', callback_data='delete_instructors')],
-    [InlineKeyboardButton(text='Назад', callback_data='cancel')]
+staff_edit_buttons = [
+    [InlineKeyboardButton(text='Просмотреть состав', callback_data='view_staff')],
+    [InlineKeyboardButton(text='Добавить вожатых и организаторов', callback_data='add_staff')],
+    [InlineKeyboardButton(text='Удалить вожатых и организаторов', callback_data='delete_staff')],
+    [InlineKeyboardButton(text='Вернуться обратно к панели', callback_data='back')]
 ]
 
 students_edit_buttons = [
+    [InlineKeyboardButton(text='Просмотреть учеников', callback_data='view_students')],
     [InlineKeyboardButton(text='Добавить ученика', callback_data='add_students')],
     [InlineKeyboardButton(text='Удалить ученика', callback_data='delete_students')],
-    [InlineKeyboardButton(text='Назад', callback_data='cancel')]
+    [InlineKeyboardButton(text='Вернуться обратно к панели', callback_data='back')]
 ]
 
-rating_edit_buttons = [
-    [InlineKeyboardButton(text='Изменить рейтинг', callback_data='add_rating')],
-    [InlineKeyboardButton(text='Удалить рейтинг', callback_data='delete_rating')],
-    [InlineKeyboardButton(text='Отмена', callback_data='cancel')]
+mailing_buttons = [
+    [InlineKeyboardButton(text='Вожатым и организаторам', callback_data='mailing_staff')],
+    [InlineKeyboardButton(text='Ученикам', callback_data='mailing_students')],
+    [InlineKeyboardButton(text='Всем', callback_data='mailing_all')],
+    [InlineKeyboardButton(text='Назад', callback_data='back')]
 ]
 
-
-share_contact_buttons = [
-    [KeyboardButton(text='Подать заявку', request_contact=True)]
+link_buttons = [
+    [InlineKeyboardButton(text='Создать новую ссылку', callback_data='new_link')],
+    [InlineKeyboardButton(text='Удалить текущую ссылку', callback_data='delete_link')],
+    [InlineKeyboardButton(text='Вернуться обратно к панели', callback_data='back')]
 ]
 
-share_users_buttons = [
-    [KeyboardButton(text='Выбрать',
-                    request_users=KeyboardButtonRequestUsers(request_id=1, user_is_bot=False, max_quantity=10))],
-    [KeyboardButton(text='Отмена')]
+delete_buttons = [
+    [InlineKeyboardButton(text='Удалить все', callback_data='delete_all')],
+    [InlineKeyboardButton(text='Вернуться обратно к панели', callback_data='back')]
 ]
 
-unblock_move_buttons = [
-    [InlineKeyboardButton(text='<', callback_data='swipe_back')],
-    [InlineKeyboardButton(text='')],
-    [InlineKeyboardButton(text='>', callback_data='swipe_forward')]
-]
-
-cancel_button = [
-    [InlineKeyboardButton(text='Отмена', callback_data='cancel')]
+# Have to be edited manually for each school shift.
+instructors_buttons = [
+    [InlineKeyboardButton(text='1 отряд', callback_data='squad_1')],
+    [InlineKeyboardButton(text='2 отряд', callback_data='squad_2')],
+    [InlineKeyboardButton(text='3 отряд', callback_data='squad_3')],
+    [InlineKeyboardButton(text='4 отряд', callback_data='squad_4')],
+    [InlineKeyboardButton(text='5 отряд', callback_data='squad_5')],
+    [InlineKeyboardButton(text='6 отряд', callback_data='squad_6')]
 ]
 
 back_button = [
@@ -58,11 +53,10 @@ back_button = [
 ]
 
 panel_keyboard = InlineKeyboardMarkup(inline_keyboard=panel_buttons)
-admins_edit_keyboard = InlineKeyboardMarkup(inline_keyboard=admins_edit_buttons)
-instructors_edit_keyboard = InlineKeyboardMarkup(inline_keyboard=instructors_edit_buttons)
+staff_edit_keyboard = InlineKeyboardMarkup(inline_keyboard=staff_edit_buttons)
 students_edit_keyboard = InlineKeyboardMarkup(inline_keyboard=students_edit_buttons)
-rating_edit_keyboard = InlineKeyboardMarkup(inline_keyboard=rating_edit_buttons)
-share_contact_keyboard = ReplyKeyboardMarkup(keyboard=share_contact_buttons, one_time_keyboard=True)
-share_users_keyboard = ReplyKeyboardMarkup(keyboard=share_users_buttons, one_time_keyboard=True)
-inline_cancel_keyboard = InlineKeyboardMarkup(inline_keyboard=cancel_button)
+mailing_panel_keyboard = InlineKeyboardMarkup(inline_keyboard=mailing_buttons)
+link_keyboard = InlineKeyboardMarkup(inline_keyboard=link_buttons)
+delete_keyboard = InlineKeyboardMarkup(inline_keyboard=delete_buttons)
+instructors_keyboard = InlineKeyboardMarkup(inline_keyboard=instructors_buttons)
 back_keyboard = InlineKeyboardMarkup(inline_keyboard=back_button)

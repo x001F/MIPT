@@ -7,19 +7,7 @@ import asyncio
 
 
 class Storage(BaseStorage):
-    async def update_data(self, key: StorageKey, data: Dict[str, Any], **kwargs):
-        if data:
-            _data = await self.get_data(key)
-            _data.update(data)
-
-            conn = await self._get_connection()
-            await conn.execute("""
-                INSERT OR REPLACE INTO FSM
-                VALUES (?, (SELECT state FROM FSM WHERE key = ?), ?)
-            """, (key.user_id, key.user_id, json.dumps(_data)))
-            await conn.commit()
-            await self.close()
-
+    """Self written sqlite3 FSM storage for aiogram 3.4.1"""
     def __init__(self, path: str):
         self.path = path
         self._conn = None
@@ -46,6 +34,26 @@ class Storage(BaseStorage):
             await self._conn.close()
             self._conn = None
 
+    async def get_state(self, key: StorageKey) -> Optional[str]:
+        conn = await self._get_connection()
+        cursor = await conn.execute("SELECT state FROM FSM WHERE key = ?", (key.user_id,))
+        result = await cursor.fetchone()
+        await self.close()
+
+        if result:
+            state = result[0]
+        else:
+            state = None
+
+        return state
+
+    async def get_data(self, key: StorageKey) -> Dict[str, Any]:
+        conn = await self._get_connection()
+        cursor = await conn.execute("SELECT data FROM FSM WHERE key = ?", (key.user_id,))
+        result = await cursor.fetchone()
+        await self.close()
+        return json.loads(result[0]) if result else {}
+
     async def set_state(self, key: StorageKey, state: State = None) -> None:
         conn = await self._get_connection()
 
@@ -62,19 +70,6 @@ class Storage(BaseStorage):
         await conn.commit()
         await self.close()
 
-    async def get_state(self, key: StorageKey) -> Optional[str]:
-        conn = await self._get_connection()
-        cursor = await conn.execute("SELECT state FROM FSM WHERE key = ?", (key.user_id,))
-        result = await cursor.fetchone()
-        await self.close()
-
-        if result:
-            state = result[0]
-        else:
-            state = None
-
-        return state
-
     async def set_data(self, key: StorageKey, data: Dict[str, Any]) -> None:
         conn = await self._get_connection()
         await conn.execute("""
@@ -84,12 +79,18 @@ class Storage(BaseStorage):
         await conn.commit()
         await self.close()
 
-    async def get_data(self, key: StorageKey) -> Dict[str, Any]:
-        conn = await self._get_connection()
-        cursor = await conn.execute("SELECT data FROM FSM WHERE key = ?", (key.user_id,))
-        result = await cursor.fetchone()
-        await self.close()
-        return json.loads(result[0]) if result else {}
+    async def update_data(self, key: StorageKey, data: Dict[str, Any], **kwargs):
+        if data:
+            _data = await self.get_data(key)
+            _data.update(data)
+
+            conn = await self._get_connection()
+            await conn.execute("""
+                INSERT OR REPLACE INTO FSM
+                VALUES (?, (SELECT state FROM FSM WHERE key = ?), ?)
+            """, (key.user_id, key.user_id, json.dumps(_data)))
+            await conn.commit()
+            await self.close()
 
     async def clear(self, key: StorageKey | None = None):
         conn = await self._get_connection()
